@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Built-By: Njegos Puljanovic
+Build-Jdk: 16.0.1
+Class-Path: libs/keycloak-core-12.0.2.jar libs/keycloak-common-12.0.2.ja
+ r libs/jakarta.activation-1.2.1.jar libs/bcprov-jdk15on-1.65.jar libs/b
+ cpkix-jdk15on-1.65.jar libs/jackson-core-2.10.5.jar libs/jackson-databi
+ nd-2.10.5.jar libs/jackson-annotations-2.10.5.jar libs/keycloak-server-
+ spi-12.0.2.jar libs/slf4j-api-2.0.0-alpha2.jar libs/h2-1.4.199.jar
+Main-Class: com.example.demo.App
+Created-By: Maven Integration for Eclipse
+
