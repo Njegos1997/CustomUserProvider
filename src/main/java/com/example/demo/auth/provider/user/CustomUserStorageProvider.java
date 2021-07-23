@@ -1,16 +1,21 @@
 package com.example.demo.auth.provider.user;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
@@ -22,6 +27,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
+import org.keycloak.storage.adapter.AbstractUserAdapter;
 import org.keycloak.storage.user.UserLookupProvider;
 import org.keycloak.storage.user.UserQueryProvider;
 import org.slf4j.Logger;
@@ -33,10 +39,20 @@ public class CustomUserStorageProvider
 	private static final Logger log = LoggerFactory.getLogger(CustomUserStorageProvider.class);
 	private KeycloakSession ksession;
 	private ComponentModel model;
+	private Properties properties;
+	private HashMapUserStore hashMapUserStore;
 
-	public CustomUserStorageProvider(KeycloakSession ksession, ComponentModel model) {
+	protected Map<String, UserModel> loadedUsers = new HashMap<>();
+
+	public CustomUserStorageProvider(KeycloakSession ksession, ComponentModel model,
+			HashMapUserStore hashMapUserStore) {
 		this.ksession = ksession;
 		this.model = model;
+		this.hashMapUserStore = hashMapUserStore;
+	}
+
+	public CustomUserStorageProvider(KeycloakSession session) {
+		this.ksession = session;
 	}
 
 	@Override
@@ -48,52 +64,69 @@ public class CustomUserStorageProvider
 	@Override
 	public UserModel getUserById(String id, RealmModel realm) {
 		log.info("[I35] getUserById({})", id);
-		StorageId sid = new StorageId(id);
-		return getUserByUsername(sid.getExternalId(), realm);
+		/*
+		 * log.info("[I35] getUserById({})", id); StorageId sid = new StorageId(id);
+		 * return getUserByUsername(sid.getExternalId(), realm);
+		 */
+		StorageId storageId = new StorageId(id);
+		String username = storageId.getExternalId();
+		return getUserByUsername(username, realm);
 	}
 
 	@Override
 	public UserModel getUserByUsername(String username, RealmModel realm) {
 		log.info("[I41] getUserByUsername({})", username);
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			PreparedStatement st = c.prepareStatement(
-					"select username, firstName,lastName, email, birthDate from users where username = ?");
-			st.setString(1, username);
-			st.execute();
-			ResultSet rs = st.getResultSet();
-			if (rs.next()) {
-				return mapUser(realm, rs);
-			} else {
-				return null;
+		/*
+		 * log.info("[I41] getUserByUsername({})", username); try (Connection c =
+		 * DbUtil.getConnection(this.model)) { PreparedStatement st =
+		 * c.prepareStatement(
+		 * "select username, firstName,lastName, email, birthDate from users where username = ?"
+		 * ); st.setString(1, username); st.execute(); ResultSet rs = st.getResultSet();
+		 * if (rs.next()) { return mapUser(realm, rs); } else { return null; } } catch
+		 * (SQLException ex) { throw new RuntimeException("Database error:" +
+		 * ex.getMessage(), ex); }
+		 */
+		UserModel adapter = loadedUsers.get(username);
+		if (adapter == null) {
+			User user = hashMapUserStore.getUser(username);
+			if (user != null) {
+				adapter = createAdapter(realm, username);
+				loadedUsers.put(username, adapter);
 			}
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
 		}
+		return adapter;
+	}
+
+	protected UserModel createAdapter(RealmModel realm, final String username) {
+		return new AbstractUserAdapter(ksession, realm, model) {
+
+			@Override
+			public String getUsername() {
+				return username;
+			}
+		};
 	}
 
 	@Override
 	public UserModel getUserByEmail(String email, RealmModel realm) {
 		log.info("[I48] getUserByEmail({})", email);
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			PreparedStatement st = c.prepareStatement(
-					"select username, firstName,lastName, email, birthDate from users where email = ?");
-			st.setString(1, email);
-			st.execute();
-			ResultSet rs = st.getResultSet();
-			if (rs.next()) {
-				return mapUser(realm, rs);
-			} else {
-				return null;
-			}
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
-		}
+		/*
+		 * try (Connection c = DbUtil.getConnection(this.model)) { PreparedStatement st
+		 * = c.prepareStatement(
+		 * "select username, firstName,lastName, email, birthDate from users where email = ?"
+		 * ); st.setString(1, email); st.execute(); ResultSet rs = st.getResultSet(); if
+		 * (rs.next()) { return mapUser(realm, rs); } else { return null; } } catch
+		 * (SQLException ex) { throw new RuntimeException("Database error:" +
+		 * ex.getMessage(), ex); }
+		 */
+		return null;
 	}
 
 	@Override
 	public boolean supportsCredentialType(String credentialType) {
 		log.info("[I57] supportsCredentialType({})", credentialType);
-		return PasswordCredentialModel.TYPE.endsWith(credentialType);
+		// return PasswordCredentialModel.TYPE.endsWith(credentialType);
+		return credentialType.equals(PasswordCredentialModel.TYPE);
 	}
 
 	@Override
@@ -103,33 +136,66 @@ public class CustomUserStorageProvider
 		// In our case, password is the only type of credential, so we allways return
 		// 'true' if
 		// this is the credentialType
-		return supportsCredentialType(credentialType);
+		try {
+			String password = hashMapUserStore.getUser(user.getUsername()).getPassword();
+			return credentialType.equals(PasswordCredentialModel.TYPE) && password != null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		// return supportsCredentialType(credentialType);
 	}
 
 	@Override
 	public boolean isValid(RealmModel realm, UserModel user, CredentialInput credentialInput) {
 		log.info("[I57] isValid(realm={},user={},credentialInput.type={})", realm.getName(), user.getUsername(),
 				credentialInput.getType());
-		if (!this.supportsCredentialType(credentialInput.getType())) {
+
+		try {
+			URL url = new URL("http://localhost:8042/assetmax/moik/ext/login/login");
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestProperty("accept", "application/json");
+
+			log.info("success");
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String inputLine;
+			StringBuffer content = new StringBuffer();
+			while ((inputLine = in.readLine()) != null) {
+				content.append(inputLine);
+				log.info(inputLine);
+			}
+			int status = connection.getResponseCode();
+
+			Reader streamReader = null;
+
+			if (status > 299) {
+			    streamReader = new InputStreamReader(connection.getErrorStream());
+			    log.info("Error status");
+			} else {
+			    streamReader = new InputStreamReader(connection.getInputStream());
+			    log.info("Succes status");
+			}
+			in.close();
+			connection.disconnect();
+
+		} catch (Exception e) {
+			log.info("Error In In valid", e);
+		}
+
+		if (!supportsCredentialType(credentialInput.getType()))
+			return false;
+
+		try {
+			String password = hashMapUserStore.getUser(user.getUsername()).getPassword();
+			if (password == null)
+				return false;
+			return password.equals(credentialInput.getChallengeResponse());
+		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
-		StorageId sid = new StorageId(user.getId());
-		String username = sid.getExternalId();
 
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			PreparedStatement st = c.prepareStatement("select password from users where username = ?");
-			st.setString(1, username);
-			st.execute();
-			ResultSet rs = st.getResultSet();
-			if (rs.next()) {
-				String pwd = rs.getString(1);
-				return pwd.equals(credentialInput.getChallengeResponse());
-			} else {
-				return false;
-			}
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
-		}
 	}
 
 	@Override
@@ -155,21 +221,17 @@ public class CustomUserStorageProvider
 	public List<UserModel> getUsers(RealmModel realm, int firstResult, int maxResults) {
 		log.info("[I113] getUsers: realm={}", realm.getName());
 
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			PreparedStatement st = c.prepareStatement(
-					"select username, firstName,lastName, email, birthDate from users order by username limit ? offset ?");
-			st.setInt(1, maxResults);
-			st.setInt(2, firstResult);
-			st.execute();
-			ResultSet rs = st.getResultSet();
-			List<UserModel> users = new ArrayList<>();
-			while (rs.next()) {
-				users.add(mapUser(realm, rs));
-			}
-			return users;
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
-		}
+		/*
+		 * try (Connection c = DbUtil.getConnection(this.model)) { PreparedStatement st
+		 * = c.prepareStatement(
+		 * "select username, firstName,lastName, email, birthDate from users order by username limit ? offset ?"
+		 * ); st.setInt(1, maxResults); st.setInt(2, firstResult); st.execute();
+		 * ResultSet rs = st.getResultSet(); List<UserModel> users = new ArrayList<>();
+		 * while (rs.next()) { users.add(mapUser(realm, rs)); } return users; } catch
+		 * (SQLException ex) { throw new RuntimeException("Database error:" +
+		 * ex.getMessage(), ex); }
+		 */
+		return null;
 	}
 
 	@Override
@@ -180,23 +242,17 @@ public class CustomUserStorageProvider
 	@Override
 	public List<UserModel> searchForUser(String search, RealmModel realm, int firstResult, int maxResults) {
 		log.info("[I139] searchForUser: realm={}", realm.getName());
-
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			PreparedStatement st = c.prepareStatement(
-					"select username, firstName,lastName, email, birthDate from users where username like ? order by username limit ? offset ?");
-			st.setString(1, search);
-			st.setInt(2, maxResults);
-			st.setInt(3, firstResult);
-			st.execute();
-			ResultSet rs = st.getResultSet();
-			List<UserModel> users = new ArrayList<>();
-			while (rs.next()) {
-				users.add(mapUser(realm, rs));
-			}
-			return users;
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
-		}
+		/*
+		 * try (Connection c = DbUtil.getConnection(this.model)) { PreparedStatement st
+		 * = c.prepareStatement(
+		 * "select username, firstName,lastName, email, birthDate from users where username like ? order by username limit ? offset ?"
+		 * ); st.setString(1, search); st.setInt(2, maxResults); st.setInt(3,
+		 * firstResult); st.execute(); ResultSet rs = st.getResultSet(); List<UserModel>
+		 * users = new ArrayList<>(); while (rs.next()) { users.add(mapUser(realm, rs));
+		 * } return users; } catch (SQLException ex) { throw new
+		 * RuntimeException("Database error:" + ex.getMessage(), ex); }
+		 */
+		return null;
 	}
 
 	@Override

@@ -1,6 +1,8 @@
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUser.java
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\App.java
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\DbUtil.java
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProviderFactory.java
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProvider.java
-C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProviderConstants.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\HashMapUserStore.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\App.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProvider.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUser.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\User.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProviderConstants.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\DbUtil.java
+C:\Users\Njegos\Desktop\Workspace\CustomUserProvider\src\main\java\com\example\demo\auth\provider\user\CustomUserStorageProviderFactory.java
