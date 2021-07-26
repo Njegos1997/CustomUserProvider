@@ -1,22 +1,24 @@
 package com.example.demo.auth.provider.user;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.sql.Connection;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputValidator;
@@ -76,19 +78,9 @@ public class CustomUserStorageProvider
 	@Override
 	public UserModel getUserByUsername(String username, RealmModel realm) {
 		log.info("[I41] getUserByUsername({})", username);
-		/*
-		 * log.info("[I41] getUserByUsername({})", username); try (Connection c =
-		 * DbUtil.getConnection(this.model)) { PreparedStatement st =
-		 * c.prepareStatement(
-		 * "select username, firstName,lastName, email, birthDate from users where username = ?"
-		 * ); st.setString(1, username); st.execute(); ResultSet rs = st.getResultSet();
-		 * if (rs.next()) { return mapUser(realm, rs); } else { return null; } } catch
-		 * (SQLException ex) { throw new RuntimeException("Database error:" +
-		 * ex.getMessage(), ex); }
-		 */
 		UserModel adapter = loadedUsers.get(username);
 		if (adapter == null) {
-			User user = hashMapUserStore.getUser(username);
+			User user = new User(username, "");
 			if (user != null) {
 				adapter = createAdapter(realm, username);
 				loadedUsers.put(username, adapter);
@@ -97,12 +89,16 @@ public class CustomUserStorageProvider
 		return adapter;
 	}
 
-	protected UserModel createAdapter(RealmModel realm, final String username) {
+	protected UserModel createAdapter(RealmModel realm, final String email) {
 		return new AbstractUserAdapter(ksession, realm, model) {
-
 			@Override
 			public String getUsername() {
-				return username;
+				return email;
+			}
+			
+			@Override
+			public String getEmail() {
+				return email;
 			}
 		};
 	}
@@ -110,16 +106,15 @@ public class CustomUserStorageProvider
 	@Override
 	public UserModel getUserByEmail(String email, RealmModel realm) {
 		log.info("[I48] getUserByEmail({})", email);
-		/*
-		 * try (Connection c = DbUtil.getConnection(this.model)) { PreparedStatement st
-		 * = c.prepareStatement(
-		 * "select username, firstName,lastName, email, birthDate from users where email = ?"
-		 * ); st.setString(1, email); st.execute(); ResultSet rs = st.getResultSet(); if
-		 * (rs.next()) { return mapUser(realm, rs); } else { return null; } } catch
-		 * (SQLException ex) { throw new RuntimeException("Database error:" +
-		 * ex.getMessage(), ex); }
-		 */
-		return null;
+		UserModel adapter = loadedUsers.get(email);
+		if (adapter == null) {
+			User user = new User(email, "");
+			if (user != null) {
+				adapter = createAdapter(realm, email);
+				loadedUsers.put(email, adapter);
+			}
+		}
+		return adapter;
 	}
 
 	@Override
@@ -151,50 +146,38 @@ public class CustomUserStorageProvider
 		log.info("[I57] isValid(realm={},user={},credentialInput.type={})", realm.getName(), user.getUsername(),
 				credentialInput.getType());
 
+		boolean successfulLogin = false;
+		log.info("successfulLogin: ", successfulLogin);
+
 		try {
-			URL url = new URL("http://localhost:8765/assetmax/moik/ext/login/login?auth=emailpassword&email=codaxy%40evooq.ch&password=Welcome123");
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestProperty("accept", "application/json");
+			
+			String result = sendPOST("http://localhost:8765/assetmax/moik/ext/login/login");
+			log.info(result);
 
 			log.info("success");
 
-			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			String inputLine;
-			StringBuffer content = new StringBuffer();
-			while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
-				log.info(inputLine);
+			if (!supportsCredentialType(credentialInput.getType()))
+			{
+				log.info("NINE DOBRO");
+				return false;
 			}
-			int status = connection.getResponseCode();
 
-			Reader streamReader = null;
+			try {
+				if (result.contains("tokenId")) {
+					log.info("LOGOVAN JEEEE");
+					successfulLogin = true;
+				}
 
-			if (status > 299) {
-			    streamReader = new InputStreamReader(connection.getErrorStream());
-			    log.info("Error status");
-			} else {
-			    streamReader = new InputStreamReader(connection.getInputStream());
-			    log.info("Succes status");
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
 			}
-			in.close();
-			connection.disconnect();
 
-		} catch (Exception e) {
+		} catch (IOException e) {
 			log.info("Error In In valid", e);
 		}
 
-		if (!supportsCredentialType(credentialInput.getType()))
-			return false;
-
-		try {
-			String password = hashMapUserStore.getUser(user.getUsername()).getPassword();
-			if (password == null)
-				return false;
-			return password.equals(credentialInput.getChallengeResponse());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		return successfulLogin;
 
 	}
 
@@ -287,6 +270,28 @@ public class CustomUserStorageProvider
 				.birthDate(rs.getDate("birthDate")).build();
 
 		return user;
+	}
+
+	private static String sendPOST(String url) throws IOException {
+
+		String result = "";
+		HttpPost post = new HttpPost(url);
+
+		// add request parameters or form parameters
+		List<NameValuePair> urlParameters = new ArrayList<>();
+		urlParameters.add(new BasicNameValuePair("auth", "emailpassword"));
+		urlParameters.add(new BasicNameValuePair("email", "codaxy@evooq.ch"));
+		urlParameters.add(new BasicNameValuePair("password", "Welcome123"));
+
+		post.setEntity(new UrlEncodedFormEntity(urlParameters));
+
+		try (CloseableHttpClient httpClient = HttpClients.createDefault();
+				CloseableHttpResponse response = httpClient.execute(post)) {
+
+			result = EntityUtils.toString(response.getEntity());
+		}
+
+		return result;
 	}
 
 }
