@@ -152,7 +152,7 @@ public class CustomUserStorageProvider
 				credentialInput.getType());
 
 		try {
-			URL url = new URL("http://localhost:8042/assetmax/moik/ext/login/login");
+			URL url = new URL("http://localhost:8765/assetmax/moik/ext/login/login?auth=emailpassword&email=codaxy%40evooq.ch&password=Welcome123");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestProperty("accept", "application/json");
 
@@ -201,15 +201,13 @@ public class CustomUserStorageProvider
 	@Override
 	public int getUsersCount(RealmModel realm) {
 		log.info("[I93] getUsersCount: realm={}", realm.getName());
-		try (Connection c = DbUtil.getConnection(this.model)) {
-			Statement st = c.createStatement();
-			st.execute("select count(*) from users");
-			ResultSet rs = st.getResultSet();
-			rs.next();
-			return rs.getInt(1);
-		} catch (SQLException ex) {
-			throw new RuntimeException("Database error:" + ex.getMessage(), ex);
-		}
+		/*
+		 * try (Connection c = DbUtil.getConnection(this.model)) { Statement st =
+		 * c.createStatement(); st.execute("select count(*) from users"); ResultSet rs =
+		 * st.getResultSet(); rs.next(); return rs.getInt(1); } catch (SQLException ex)
+		 * { throw new RuntimeException("Database error:" + ex.getMessage(), ex); }
+		 */
+		return 0;
 	}
 
 	@Override
