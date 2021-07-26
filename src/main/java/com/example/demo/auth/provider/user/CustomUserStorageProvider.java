@@ -151,7 +151,7 @@ public class CustomUserStorageProvider
 
 		try {
 			
-			String result = sendPOST("http://localhost:8765/assetmax/moik/ext/login/login");
+			String result = sendPOST("http://localhost:8765/assetmax/moik/ext/login/login", user.getUsername(), credentialInput.getChallengeResponse());
 			log.info(result);
 
 			log.info("success");
@@ -272,16 +272,18 @@ public class CustomUserStorageProvider
 		return user;
 	}
 
-	private static String sendPOST(String url) throws IOException {
+	private static String sendPOST(String url, String email, String password) throws IOException {
 
 		String result = "";
 		HttpPost post = new HttpPost(url);
+		log.info(email);
+		log.info(password);
 
 		// add request parameters or form parameters
 		List<NameValuePair> urlParameters = new ArrayList<>();
 		urlParameters.add(new BasicNameValuePair("auth", "emailpassword"));
-		urlParameters.add(new BasicNameValuePair("email", "codaxy@evooq.ch"));
-		urlParameters.add(new BasicNameValuePair("password", "Welcome123"));
+		urlParameters.add(new BasicNameValuePair("email", email));
+		urlParameters.add(new BasicNameValuePair("password", password));
 
 		post.setEntity(new UrlEncodedFormEntity(urlParameters));
 
