@@ -1,18 +1,7 @@
 package com.example.demo.auth.provider.user;
 
-import static com.example.demo.auth.provider.user.CustomUserStorageProviderConstants.CONFIG_KEY_VALIDATION_QUERY;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.util.Properties;
-
-import org.keycloak.Config;
 import org.keycloak.component.ComponentModel;
-import org.keycloak.component.ComponentValidationException;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.RealmModel;
 import org.keycloak.storage.UserStorageProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,87 +10,18 @@ public class CustomUserStorageProviderFactory
 		implements UserStorageProviderFactory<CustomUserStorageProvider> {
 	
 	private static final Logger log = LoggerFactory.getLogger(CustomUserStorageProviderFactory.class);
-	//protected final List<ProviderConfigProperty> configMetadata;
-	public static final String PROVIDER_NAME = "readonly-property-file";
-	protected Properties properties = new Properties();
-	HashMapUserStore userStore = new HashMapUserStore();
-	
-	/*
-	 * public CustomUserStorageProviderFactory() {
-	 * log.info("[I24] CustomUserStorageProviderFactory created"); configMetadata =
-	 * ProviderConfigurationBuilder.create() .property()
-	 * .name(CONFIG_KEY_JDBC_DRIVER) .label("JDBC Driver Class")
-	 * .type(ProviderConfigProperty.STRING_TYPE) .defaultValue("org.h2.Driver")
-	 * .helpText("Fully qualified class name of the JDBC driver") .add() .property()
-	 * .name(CONFIG_KEY_JDBC_URL) .label("JDBC URL")
-	 * .type(ProviderConfigProperty.STRING_TYPE) .defaultValue("jdbc:h2:mem:~/test")
-	 * .helpText("JDBC URL used to connect to the user database") .add() .property()
-	 * .name(CONFIG_KEY_DB_USERNAME) .label("Database User")
-	 * .type(ProviderConfigProperty.STRING_TYPE) .defaultValue("sa")
-	 * .helpText("Username used to connect to the database") .add() .property()
-	 * .name(CONFIG_KEY_DB_PASSWORD) .label("Database Password")
-	 * .type(ProviderConfigProperty.STRING_TYPE) .defaultValue("123")
-	 * .helpText("Password used to connect to the database") .secret(true) .add()
-	 * .property() .name(CONFIG_KEY_VALIDATION_QUERY) .label("SQL Validation Query")
-	 * .type(ProviderConfigProperty.STRING_TYPE)
-	 * .helpText("SQL query used to validate a connection")
-	 * .defaultValue("select 1") .add() .build(); }
-	 */
+	public static final String PROVIDER_NAME = "custom-user-provider";
 	
 	@Override
 	public CustomUserStorageProvider create(KeycloakSession ksession, ComponentModel model) {
 		log.info("[I63] creating new CustomUserStorageProvider");
-        return new CustomUserStorageProvider(ksession, model, userStore);
+        return new CustomUserStorageProvider(ksession, model);
 	}
 
 	@Override
 	public String getId() {
 		 log.info("[I69] getId()");
-	        return PROVIDER_NAME;  //"custom-user-provider";
+	        return PROVIDER_NAME;
 	}
-
-	/*
-	 * @Override public List<ProviderConfigProperty> getConfigProperties() { return
-	 * configMetadata; }
-	 */
-	@Override
-    public void init(Config.Scope config) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("/users.properties");
-
-        if (is == null) {
-            log.warn("Could not find users.properties in classpath");
-        } else {
-            try {
-                properties.load(is);
-            } catch (IOException ex) {
-                log.error("Failed to load users.properties file", ex);
-            }
-        }
-    }
-	
-	@Override
-    public void validateConfiguration(KeycloakSession session, RealmModel realm, ComponentModel config) throws ComponentValidationException {
-        
-		/*
-		 * try (Connection c = DbUtil.getConnection(config)) {
-		 * log.info("[I84] Testing connection..." );
-		 * c.createStatement().execute(config.get(CONFIG_KEY_VALIDATION_QUERY));
-		 * log.info("[I92] Connection OK !" ); } catch(Exception ex) {
-		 * log.warn("[W94] Unable to validate connection: ex={}", ex.getMessage());
-		 * throw new
-		 * ComponentValidationException("Unable to validate database connection",ex); }
-		 */
-    }
-	
-	@Override
-    public void onUpdate(KeycloakSession session, RealmModel realm, ComponentModel oldModel, ComponentModel newModel) {
-        log.info("[I94] onUpdate()" );
-    }
-
-    @Override
-    public void onCreate(KeycloakSession session, RealmModel realm, ComponentModel model) {
-        log.info("[I99] onCreate()" );
-    }
-   
-
+	 
 }
