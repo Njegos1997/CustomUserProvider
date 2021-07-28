@@ -63,11 +63,11 @@ public class CustomUserStorageProvider
 		log.info("[I41] getUserByUsername({})", username);
 		UserModel adapter = loadedUsers.get(username);
 		if (adapter == null) {
-			//User user = new User(username, "");
-			//if (user != null) {
-				adapter = createAdapter(realm, username);
-				loadedUsers.put(username, adapter);
-			//}
+			// User user = new User(username, "");
+			// if (user != null) {
+			adapter = createAdapter(realm, username);
+			loadedUsers.put(username, adapter);
+			// }
 		}
 		return adapter;
 	}
@@ -90,15 +90,14 @@ public class CustomUserStorageProvider
 	public UserModel getUserByEmail(String email, RealmModel realm) {
 		log.info("[I48] getUserByEmail({})", email);
 
-		//UserModel adapter = loadedUsers.get(email);
-		//if (adapter == null) {
-			//User user = new User(email, "");
-			//if (user != null) {
-				//adapter = createAdapter(realm, email);
-				//loadedUsers.put(email, adapter);
-			//}
-		//}
-		return null;  // adapter;
+		UserModel adapter = loadedUsers.get(email);
+		if (adapter == null) {
+			// User user = new User(email, "");
+			// if (user != null) {
+			adapter = createAdapter(realm, email);
+			loadedUsers.put(email, adapter);
+		}
+		return adapter;
 	}
 
 	@Override
@@ -111,12 +110,6 @@ public class CustomUserStorageProvider
 	public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
 		log.info("[I57] isConfiguredFor(realm={},user={},credentialType={})", realm.getName(), user.getUsername(),
 				credentialType);
-		/*
-		 * try { String password =
-		 * hashMapUserStore.getUser(user.getUsername()).getPassword(); return
-		 * credentialType.equals(PasswordCredentialModel.TYPE) && password != null; }
-		 * catch (Exception e) { e.printStackTrace(); return false; }
-		 */
 		return supportsCredentialType(credentialType);
 	}
 
@@ -125,8 +118,7 @@ public class CustomUserStorageProvider
 		log.info("[I57] isValid(realm={},user={},credentialInput.type={})", realm.getName(), user.getUsername(),
 				credentialInput.getType());
 
-		boolean successfulLogin = false;
-		log.info("successfulLogin: ", successfulLogin);
+		boolean isSuccessfulLogedIn = false;
 
 		try {
 
@@ -134,16 +126,12 @@ public class CustomUserStorageProvider
 					credentialInput.getChallengeResponse());
 			log.info(result);
 
-			log.info("success");
-
 			if (!supportsCredentialType(credentialInput.getType())) {
-				log.info("NINE DOBRO");
 				return false;
 			}
 
 			if (result.contains("tokenId")) {
-				log.info("LOGOVAN JEEEE");
-				successfulLogin = true;
+				isSuccessfulLogedIn = true;
 			} else {
 				return false;
 			}
@@ -152,10 +140,10 @@ public class CustomUserStorageProvider
 			log.info("Error In In valid", e);
 		}
 
-		return successfulLogin;
+		return isSuccessfulLogedIn;
 
 	}
-	
+
 	private static String sendPOST(String url, String email, String password) throws IOException {
 
 		String result = "";
@@ -163,7 +151,7 @@ public class CustomUserStorageProvider
 		log.info(email);
 		log.info(password);
 
-		// add request parameters or form parameters
+		// add request parameters
 		List<NameValuePair> urlParameters = new ArrayList<>();
 		urlParameters.add(new BasicNameValuePair("auth", "emailpassword"));
 		urlParameters.add(new BasicNameValuePair("email", email));
@@ -233,7 +221,7 @@ public class CustomUserStorageProvider
 	public List<UserModel> searchForUserByUserAttribute(String attrName, String attrValue, RealmModel realm) {
 		return Collections.emptyList();
 	}
-	
+
 	@Override
 	public void close() {
 		log.info("[I30] close()");

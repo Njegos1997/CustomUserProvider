@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="com.example.demo.AppTest" time="0.043" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="com.example.demo.AppTest" time="0.038" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="16"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-16.0.1\bin"/>
-    <property name="sun.java.command" value="C:\Users\NJEGOS~1\AppData\Local\Temp\surefire8188319981899615693\surefirebooter2284804432918299974.jar C:\Users\Njegos Puljanovic\AppData\Local\Temp\surefire8188319981899615693 2021-07-27T15-07-46_986-jvmRun1 surefire2748385453943524205tmp surefire_04180742015450924451tmp"/>
+    <property name="sun.java.command" value="C:\Users\NJEGOS~1\AppData\Local\Temp\surefire12359305604086556000\surefirebooter14819366699556581006.jar C:\Users\Njegos Puljanovic\AppData\Local\Temp\surefire12359305604086556000 2021-07-28T14-25-05_017-jvmRun1 surefire11388246023803092778tmp surefire_05069232632250616218tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\target\test-classes;C:\Users\Njegos Puljanovic\eclipse-workspace\CustomUserProvider\target\classes;C:\Users\Njegos Puljanovic\.m2\repository\junit\junit\4.11\junit-4.11.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\keycloak\keycloak-core\12.0.2\keycloak-core-12.0.2.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\keycloak\keycloak-common\12.0.2\keycloak-common-12.0.2.jar;C:\Users\Njegos Puljanovic\.m2\repository\com\sun\activation\jakarta.activation\1.2.1\jakarta.activation-1.2.1.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\bouncycastle\bcprov-jdk15on\1.65\bcprov-jdk15on-1.65.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\bouncycastle\bcpkix-jdk15on\1.65\bcpkix-jdk15on-1.65.jar;C:\Users\Njegos Puljanovic\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.10.5\jackson-core-2.10.5.jar;C:\Users\Njegos Puljanovic\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.10.5\jackson-databind-2.10.5.jar;C:\Users\Njegos Puljanovic\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.10.5\jackson-annotations-2.10.5.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\keycloak\keycloak-server-spi\12.0.2\keycloak-server-spi-12.0.2.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\slf4j\slf4j-api\2.0.0-alpha2\slf4j-api-2.0.0-alpha2.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\apache\httpcomponents\httpclient\4.5.13\httpclient-4.5.13.jar;C:\Users\Njegos Puljanovic\.m2\repository\org\apache\httpcomponents\httpcore\4.4.13\httpcore-4.4.13.jar;C:\Users\Njegos Puljanovic\.m2\repository\commons-logging\commons-logging\1.2\commons-logging-1.2.jar;C:\Users\Njegos Puljanovic\.m2\repository\commons-codec\commons-codec\1.11\commons-codec-1.11.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\NJEGOS~1\AppData\Local\Temp\surefire8188319981899615693\surefirebooter2284804432918299974.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\NJEGOS~1\AppData\Local\Temp\surefire12359305604086556000\surefirebooter14819366699556581006.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="16.0.1+9-24"/>
