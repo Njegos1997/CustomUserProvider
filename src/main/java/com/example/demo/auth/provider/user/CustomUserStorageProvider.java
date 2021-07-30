@@ -31,6 +31,7 @@ import org.keycloak.storage.user.UserQueryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CustomUserStorageProvider
@@ -129,8 +130,8 @@ public class CustomUserStorageProvider
 					credentialInput.getChallengeResponse());
 			log.info(result);
 			
-			ObjectMapper mapper = new ObjectMapper();
-			Token assetmaxResponse = mapper.readValue(result, Token.class);
+			//ObjectMapper mapper = new ObjectMapper();
+			LoginResponse assetmaxResponse = mapLoginResponse(result);
 			log.info(assetmaxResponse.getTokenId());
 			
 			assetmaxToken = assetmaxResponse.getTokenId();
@@ -152,8 +153,23 @@ public class CustomUserStorageProvider
 		return isSuccessfulLogedIn;
 
 	}
+	
+	private LoginResponse mapLoginResponse(String loginResponse) {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		LoginResponse assetmaxResponse;
+		try {
+			assetmaxResponse = mapper.readValue(loginResponse, LoginResponse.class);
+			return assetmaxResponse;
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 
-	private static String sendPOST(String url, String email, String password) throws IOException {
+	private String sendPOST(String url, String email, String password) throws IOException {
 
 		String result = "";
 		HttpPost post = new HttpPost(url);
