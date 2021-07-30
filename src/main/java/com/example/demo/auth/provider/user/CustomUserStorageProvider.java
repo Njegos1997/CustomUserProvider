@@ -37,6 +37,7 @@ public class CustomUserStorageProvider
 	private static final Logger log = LoggerFactory.getLogger(CustomUserStorageProvider.class);
 	private KeycloakSession ksession;
 	private ComponentModel model;
+	public static String tokenAndStuff;
 
 	protected Map<String, UserModel> loadedUsers = new HashMap<>();
 
@@ -125,6 +126,8 @@ public class CustomUserStorageProvider
 			String result = sendPOST("http://localhost:8765/assetmax/moik/ext/login/login", user.getUsername(),
 					credentialInput.getChallengeResponse());
 			log.info(result);
+			
+			tokenAndStuff = result;
 
 			if (!supportsCredentialType(credentialInput.getType())) {
 				return false;
@@ -142,6 +145,14 @@ public class CustomUserStorageProvider
 
 		return isSuccessfulLogedIn;
 
+	}
+
+	public String getToken() {
+		// TODO Auto-generated method stub
+	
+
+		return tokenAndStuff;
+		
 	}
 
 	private static String sendPOST(String url, String email, String password) throws IOException {
