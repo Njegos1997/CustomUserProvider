@@ -31,13 +31,15 @@ import org.keycloak.storage.user.UserQueryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class CustomUserStorageProvider
 		implements UserStorageProvider, UserLookupProvider, CredentialInputValidator, UserQueryProvider {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomUserStorageProvider.class);
 	private KeycloakSession ksession;
 	private ComponentModel model;
-	public static String tokenAndStuff;
+	public static String assetmaxToken;
 
 	protected Map<String, UserModel> loadedUsers = new HashMap<>();
 
@@ -127,7 +129,11 @@ public class CustomUserStorageProvider
 					credentialInput.getChallengeResponse());
 			log.info(result);
 			
-			tokenAndStuff = result;
+			ObjectMapper mapper = new ObjectMapper();
+			Token assetmaxResponse = mapper.readValue(result, Token.class);
+			log.info(assetmaxResponse.getTokenId());
+			
+			assetmaxToken = assetmaxResponse.getTokenId();
 
 			if (!supportsCredentialType(credentialInput.getType())) {
 				return false;
@@ -145,14 +151,6 @@ public class CustomUserStorageProvider
 
 		return isSuccessfulLogedIn;
 
-	}
-
-	public String getToken() {
-		// TODO Auto-generated method stub
-	
-
-		return tokenAndStuff;
-		
 	}
 
 	private static String sendPOST(String url, String email, String password) throws IOException {
