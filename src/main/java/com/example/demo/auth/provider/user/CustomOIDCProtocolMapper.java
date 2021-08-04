@@ -94,12 +94,6 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 		log.info(userSession.getUser().getUsername());
 		log.info(CustomUserStorageProvider.assetmaxToken);
 
-		/*
-		 * try { String assetmaxToken =
-		 * sendGET("http://localhost:8765/assetmax/moik/ext/auth/current-user");
-		 * log.info(assetmaxToken); } catch (IOException e) { // TODO Auto-generated
-		 * catch block e.printStackTrace(); }
-		 */
 		log.info("IN METHOOOOOOOOOD");
 
 		setClaim(token, mappingModel, userSession, session, clientSessionCtx);
