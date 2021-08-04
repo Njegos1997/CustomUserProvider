@@ -12,17 +12,11 @@ import javax.ws.rs.core.NewCookie;
 
 import org.apache.http.Header;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.cookie.ClientCookie;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.keycloak.component.ComponentModel;
@@ -218,6 +212,9 @@ public class CustomUserStorageProvider
 			Arrays.stream(headers).forEach(
 					header -> log.info("header name: {}, header value: {}.", header.getName(), header.getValue()));
 		}
+		
+		CookieHelper.addCookie("tokenId", loginBodyResponse.getTokenId(), "/", null, null, NewCookie.DEFAULT_MAX_AGE,
+				false, false);
 	}
 
 	@Override
