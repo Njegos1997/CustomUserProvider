@@ -90,6 +90,7 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 
 		log.info("SOAM: inside transformAccessToken");
 		token.getOtherClaims().put("assetmaxToken", CustomUserStorageProvider.assetmaxToken);
+		token.getOtherClaims().put("actionableContent", CustomUserStorageProvider.actionableContent);
 
 		log.info(userSession.getUser().getUsername());
 		log.info(CustomUserStorageProvider.assetmaxToken);

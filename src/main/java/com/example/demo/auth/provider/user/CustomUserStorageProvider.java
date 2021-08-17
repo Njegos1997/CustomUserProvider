@@ -2,7 +2,6 @@ package com.example.demo.auth.provider.user;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -10,14 +9,19 @@ import java.util.Map;
 
 import javax.ws.rs.core.NewCookie;
 
-import org.apache.http.Header;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
@@ -46,6 +50,7 @@ public class CustomUserStorageProvider
 	private KeycloakSession ksession;
 	private ComponentModel model;
 	public static String assetmaxToken;
+	public static String actionableContent;
 	private String responseBody;
 
 	protected Map<String, UserModel> loadedUsers = new HashMap<>();
@@ -71,7 +76,7 @@ public class CustomUserStorageProvider
 	@Override
 	public UserModel getUserByUsername(String username, RealmModel realm) {
 		log.info("[I41] getUserByUsername({})", username);
-		UserModel adapter = loadedUsers.get(username);
+		UserModel adapter = loadedUsers.get(username);;
 		if (adapter == null) {
 			// User user = new User(username, "");
 			// if (user != null) {
@@ -132,18 +137,19 @@ public class CustomUserStorageProvider
 
 		try {
 
-			CloseableHttpResponse response = sendPOST("https://demo.iam.evooq.io/assetmax/moik/ext/login/login",
+			CloseableHttpResponse response = login("https://demo.iam.evooq.io/assetmax/moik/ext/login/login",
 					user.getUsername(), credentialInput.getChallengeResponse());
 
-			log.info(responseBody);
 
 			LoginResponse loginBodyResponse = mapLoginResponse(responseBody);
 			log.info(loginBodyResponse.getTokenId());
 
+			log.info(responseBody);
 			addEvooqCookie(response, loginBodyResponse);
 
 			assetmaxToken = loginBodyResponse.getTokenId();
-
+			
+			getUserInfo();
 			if (!supportsCredentialType(credentialInput.getType())) {
 				return false;
 			}
@@ -176,9 +182,8 @@ public class CustomUserStorageProvider
 		return loginBodyResponse;
 	}
 
-	private CloseableHttpResponse sendPOST(String url, String email, String password) throws IOException {
+	private CloseableHttpResponse login(String url, String email, String password) throws IOException {
 
-		// String result = "";
 		HttpPost post = new HttpPost(url);
 		log.info(email);
 		log.info(password);
@@ -190,29 +195,71 @@ public class CustomUserStorageProvider
 		urlParameters.add(new BasicNameValuePair("password", password));
 
 		post.setEntity(new UrlEncodedFormEntity(urlParameters));
+		
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
 				CloseableHttpResponse response = httpClient.execute(post)) {
-			responseBody = EntityUtils.toString(response.getEntity());
 
-			// result = EntityUtils.toString(response.getEntity());
+			responseBody = EntityUtils.toString(response.getEntity());
+			log.info("RESPONSE" + responseBody);
+	
 			return response;
 		}
+
+	}
+	
+	private CloseableHttpResponse getUserInfo() {
+		
+		BasicCookieStore cookieStore = new BasicCookieStore();
+	    BasicClientCookie cookie = new BasicClientCookie("tokenId", assetmaxToken);
+	    cookie.setDomain("demo.iam.evooq.io");
+	    cookie.setPath("/");
+	    cookieStore.addCookie(cookie);
+		
+	    HttpGet get = new HttpGet("https://demo.iam.evooq.io/assetmax/moik/ext/auth/current-user");
+	    
+	    HttpContext localContext = new BasicHttpContext();
+	    localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
+	    get.setHeader("tokenId", assetmaxToken);
+	    log.info("IN INFO TOKEN" + assetmaxToken);
+		CookieHelper.addCookie("tokenId", assetmaxToken, "/", null, null, NewCookie.DEFAULT_MAX_AGE,
+				false, false);
+	    try (CloseableHttpClient client = HttpClients.createDefault()) {
+
+			   CloseableHttpResponse response = client.execute(get, localContext);
+			   String userInfo = EntityUtils.toString(response.getEntity());
+			   log.info("USER INFO:", userInfo);
+			   UserInfo mappedUser = mapUserInfo(userInfo);
+			   log.info("MAPPPED" + mappedUser.getRecords().get(0).getUser_additional_info());
+			   actionableContent = mappedUser.getRecords().get(0).getUser_additional_info();
+			   return response;
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		return null;
+
+	}
+	
+	private UserInfo mapUserInfo(String userInfo) {
+
+		ObjectMapper mapper = new ObjectMapper();
+		UserInfo userInfoMapped = new UserInfo();
+		try {
+			userInfoMapped = mapper.readValue(userInfo, UserInfo.class);
+			return userInfoMapped;
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return userInfoMapped;
 	}
 
 	private void addEvooqCookie(CloseableHttpResponse response, LoginResponse loginBodyResponse) {
 
-		Header[] headers = response.getAllHeaders();
-		Header setCookieHeader = response.getHeaders("set-cookie")[0];
-		response.removeHeaders("set-cookie");
-		response.addHeader(setCookieHeader);
-		response.addHeader("set-cookie", "tokenId=" + loginBodyResponse.getTokenId() + ";Path=/");
+		response.addHeader("Set-Cookie", "tokenId=" + loginBodyResponse.getTokenId() + ";Path=/");
 
-		if (headers != null && headers.length > 0) {
-			log.info("HEADERS:");
-			Arrays.stream(headers).forEach(
-					header -> log.info("header name: {}, header value: {}.", header.getName(), header.getValue()));
-		}
-		
 		CookieHelper.addCookie("tokenId", loginBodyResponse.getTokenId(), "/", null, null, NewCookie.DEFAULT_MAX_AGE,
 				false, false);
 	}
