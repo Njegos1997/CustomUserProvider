@@ -40,7 +40,10 @@ import org.keycloak.storage.user.UserQueryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.example.demo.auth.provider.dto.LoginResponseDto;
+import com.example.demo.auth.provider.dto.UserInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CustomUserStorageProvider
@@ -52,7 +55,6 @@ public class CustomUserStorageProvider
 	public static String assetmaxToken;
 	public static String actionableContent;
 	private String responseBody;
-
 	protected Map<String, UserModel> loadedUsers = new HashMap<>();
 
 	public CustomUserStorageProvider(KeycloakSession ksession, ComponentModel model) {
@@ -76,13 +78,11 @@ public class CustomUserStorageProvider
 	@Override
 	public UserModel getUserByUsername(String username, RealmModel realm) {
 		log.info("[I41] getUserByUsername({})", username);
-		UserModel adapter = loadedUsers.get(username);;
+		UserModel adapter = loadedUsers.get(username);
+		
 		if (adapter == null) {
-			// User user = new User(username, "");
-			// if (user != null) {
 			adapter = createAdapter(realm, username);
 			loadedUsers.put(username, adapter);
-			// }
 		}
 		return adapter;
 	}
@@ -107,8 +107,6 @@ public class CustomUserStorageProvider
 
 		UserModel adapter = loadedUsers.get(email);
 		if (adapter == null) {
-			// User user = new User(email, "");
-			// if (user != null) {
 			adapter = createAdapter(realm, email);
 			loadedUsers.put(email, adapter);
 		}
@@ -136,43 +134,43 @@ public class CustomUserStorageProvider
 		boolean isSuccessfulLogedIn = false;
 
 		try {
-
-			CloseableHttpResponse response = login("https://demo.iam.evooq.io/assetmax/moik/ext/login/login",
+			
+			String loginPath = System.getenv("ASSETMAX_BASE") + "/assetmax/moik/ext/login/login";
+		
+			CloseableHttpResponse response = login(loginPath,
 					user.getUsername(), credentialInput.getChallengeResponse());
 
+			LoginResponseDto loginBodyResponse = mapLoginResponse(responseBody);
+			assetmaxToken = loginBodyResponse.getTokenId();
 
-			LoginResponse loginBodyResponse = mapLoginResponse(responseBody);
-			log.info(loginBodyResponse.getTokenId());
-
-			log.info(responseBody);
 			addEvooqCookie(response, loginBodyResponse);
 
-			assetmaxToken = loginBodyResponse.getTokenId();
-			
-			getUserInfo();
 			if (!supportsCredentialType(credentialInput.getType())) {
 				return false;
 			}
 			if (loginBodyResponse.getTokenId() != null) {
 				isSuccessfulLogedIn = true;
+				String userInfo = getUserInfo();
+				UserInfoDto mappedUser = mapUserInfo(userInfo);
+				actionableContent = mappedUser.getRecords().get(0).getUserAdditionalInfo();
 			} else {
 				return false;
 			}
-
 		} catch (IOException e) {
-			log.info("Error In In valid", e);
+			log.info("Error In isValid", e);
 		}
 
 		return isSuccessfulLogedIn;
 
 	}
-
-	private LoginResponse mapLoginResponse(String loginResponse) {
+	
+	private LoginResponseDto mapLoginResponse(String loginResponse) {
 
 		ObjectMapper mapper = new ObjectMapper();
-		LoginResponse loginBodyResponse = new LoginResponse();
+		LoginResponseDto loginBodyResponse = new LoginResponseDto();
+
 		try {
-			loginBodyResponse = mapper.readValue(loginResponse, LoginResponse.class);
+			loginBodyResponse = mapper.readValue(loginResponse, LoginResponseDto.class);
 			return loginBodyResponse;
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -185,9 +183,6 @@ public class CustomUserStorageProvider
 	private CloseableHttpResponse login(String url, String email, String password) throws IOException {
 
 		HttpPost post = new HttpPost(url);
-		log.info(email);
-		log.info(password);
-
 		// add request parameters
 		List<NameValuePair> urlParameters = new ArrayList<>();
 		urlParameters.add(new BasicNameValuePair("auth", "emailpassword"));
@@ -195,58 +190,63 @@ public class CustomUserStorageProvider
 		urlParameters.add(new BasicNameValuePair("password", password));
 
 		post.setEntity(new UrlEncodedFormEntity(urlParameters));
-		
+
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
 				CloseableHttpResponse response = httpClient.execute(post)) {
-
+			
 			responseBody = EntityUtils.toString(response.getEntity());
-			log.info("RESPONSE" + responseBody);
-	
+
 			return response;
 		}
+	}
+
+	private String getUserInfo() {
+
+		String currentUserPath =  System.getenv("ASSETMAX_BASE") + "/assetmax/moik/ext/auth/current-user";
+		
+		HttpGet get = new HttpGet(currentUserPath);
+		HttpContext localContext = getHttpContext();
+		String userInfo = "";
+		
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
+			CloseableHttpResponse response = client.execute(get, localContext);
+			userInfo = EntityUtils.toString(response.getEntity());
+			return userInfo;
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+		
+		return userInfo;
+	}
+	
+	private HttpContext getHttpContext() {
+		
+		HttpContext localContext = new BasicHttpContext();
+		localContext.setAttribute(HttpClientContext.COOKIE_STORE, setCookies());
+		
+		return localContext;
 
 	}
 	
-	private CloseableHttpResponse getUserInfo() {
-		
+	private BasicCookieStore setCookies() {
+
 		BasicCookieStore cookieStore = new BasicCookieStore();
-	    BasicClientCookie cookie = new BasicClientCookie("tokenId", assetmaxToken);
-	    cookie.setDomain("demo.iam.evooq.io");
-	    cookie.setPath("/");
-	    cookieStore.addCookie(cookie);
+		BasicClientCookie cookie = new BasicClientCookie("tokenId", assetmaxToken);
+		cookie.setDomain("demo.iam.evooq.io");
+		cookie.setPath("/");
+		cookieStore.addCookie(cookie);
 		
-	    HttpGet get = new HttpGet("https://demo.iam.evooq.io/assetmax/moik/ext/auth/current-user");
-	    
-	    HttpContext localContext = new BasicHttpContext();
-	    localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
-	    get.setHeader("tokenId", assetmaxToken);
-	    log.info("IN INFO TOKEN" + assetmaxToken);
-		CookieHelper.addCookie("tokenId", assetmaxToken, "/", null, null, NewCookie.DEFAULT_MAX_AGE,
-				false, false);
-	    try (CloseableHttpClient client = HttpClients.createDefault()) {
-
-			   CloseableHttpResponse response = client.execute(get, localContext);
-			   String userInfo = EntityUtils.toString(response.getEntity());
-			   log.info("USER INFO:", userInfo);
-			   UserInfo mappedUser = mapUserInfo(userInfo);
-			   log.info("MAPPPED" + mappedUser.getRecords().get(0).getUser_additional_info());
-			   actionableContent = mappedUser.getRecords().get(0).getUser_additional_info();
-			   return response;
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		return null;
-
+		return cookieStore;
 	}
-	
-	private UserInfo mapUserInfo(String userInfo) {
 
-		ObjectMapper mapper = new ObjectMapper();
-		UserInfo userInfoMapped = new UserInfo();
+	private UserInfoDto mapUserInfo(String userInfo) {
+
+		ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		UserInfoDto userInfoMapped = new UserInfoDto();
+		
 		try {
-			userInfoMapped = mapper.readValue(userInfo, UserInfo.class);
+			userInfoMapped = mapper.readValue(userInfo, UserInfoDto.class);
 			return userInfoMapped;
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -256,7 +256,7 @@ public class CustomUserStorageProvider
 		return userInfoMapped;
 	}
 
-	private void addEvooqCookie(CloseableHttpResponse response, LoginResponse loginBodyResponse) {
+	private void addEvooqCookie(CloseableHttpResponse response, LoginResponseDto loginBodyResponse) {
 
 		response.addHeader("Set-Cookie", "tokenId=" + loginBodyResponse.getTokenId() + ";Path=/");
 
@@ -322,5 +322,4 @@ public class CustomUserStorageProvider
 	public void close() {
 		log.info("[I30] close()");
 	}
-
 }

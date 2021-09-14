@@ -104,23 +104,6 @@
 			<version>2.12.4</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>4.0.1</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.springframework/spring-web -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>4.3.11.RELEASE</version>
-		</dependency>
-
-
-
 		<!-- <dependency> <groupId>com.example.demo</groupId> <artifactId>oauth-authorization-server</artifactId> 
 			<version>0.1.0-SNAPSHOT</version> <scope>test</scope> </dependency> -->
 	</dependencies>

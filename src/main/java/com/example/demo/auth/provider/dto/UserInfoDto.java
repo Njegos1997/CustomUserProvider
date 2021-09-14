@@ -1,16 +1,14 @@
-package com.example.demo.auth.provider.user;
+package com.example.demo.auth.provider.dto;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserInfo {
+public class UserInfoDto {
 
 	private int total;
-	private List<Records> records = new ArrayList<>();
+	private List<RecordDto> records = new ArrayList<>();
 	private boolean success;
 	private String message;
-	
-	
 	
 	public boolean isSuccess() {
 		return success;
@@ -30,13 +28,11 @@ public class UserInfo {
 	public void setTotal(int total) {
 		this.total = total;
 	}
-	public List<Records> getRecords() {
+	public List<RecordDto> getRecords() {
 		return records;
 	}
-	public void setRecords(List<Records> records) {
+	public void setRecords(List<RecordDto> records) {
 		this.records = records;
 	} 
-	
-
 	
 }

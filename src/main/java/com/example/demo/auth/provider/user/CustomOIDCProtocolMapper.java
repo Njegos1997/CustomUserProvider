@@ -33,12 +33,6 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 	static {
 
 		ProviderConfigProperty property;
-		property = new ProviderConfigProperty();
-		property.setName(ProtocolMapperUtils.USER_ATTRIBUTE);
-		property.setLabel(ProtocolMapperUtils.USER_MODEL_ATTRIBUTE_LABEL);
-		property.setHelpText(ProtocolMapperUtils.USER_MODEL_ATTRIBUTE_HELP_TEXT);
-		property.setType(ProviderConfigProperty.STRING_TYPE);
-		configProperties.add(property);
 
 		property = new ProviderConfigProperty();
 		property.setName(ProtocolMapperUtils.MULTIVALUED);
@@ -48,8 +42,6 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 		configProperties.add(property);
 		OIDCAttributeMapperHelper.addTokenClaimNameConfig(configProperties);
 		OIDCAttributeMapperHelper.addIncludeInTokensConfig(configProperties, CustomOIDCProtocolMapper.class);
-
-		log.info("IN STATIC");
 
 	}
 
@@ -68,34 +60,29 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 	@Override
 	public String getDisplayType() {
 
-		return "Custom Protocol Mapper";
+		return "Evooq Protocol Mapper";
 	}
 
 	@Override
 	public String getId() {
-
 		log.info("SOAM: inside getId");
+		
 		return PROVIDER_ID;
 	}
 
 	@Override
 	public String getHelpText() {
-
 		log.info("SOAM: inside getHelpText");
+		
 		return "some help text";
 	}
 
 	public AccessToken transformAccessToken(AccessToken token, ProtocolMapperModel mappingModel,
 			KeycloakSession session, UserSessionModel userSession, ClientSessionContext clientSessionCtx) {
-
 		log.info("SOAM: inside transformAccessToken");
+		
 		token.getOtherClaims().put("assetmaxToken", CustomUserStorageProvider.assetmaxToken);
 		token.getOtherClaims().put("actionableContent", CustomUserStorageProvider.actionableContent);
-
-		log.info(userSession.getUser().getUsername());
-		log.info(CustomUserStorageProvider.assetmaxToken);
-
-		log.info("IN METHOOOOOOOOOD");
 
 		setClaim(token, mappingModel, userSession, session, clientSessionCtx);
 		return token;
@@ -117,22 +104,4 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper
 		mapper.setConfig(config);
 		return mapper;
 	}
-
-	/*
-	 * private static String sendGET(String url) throws IOException {
-	 * log.info("SOAM: sendGET"); String result = ""; HttpGet get = new
-	 * HttpGet(url);
-	 * 
-	 * try (CloseableHttpClient httpClient = HttpClients.createDefault();
-	 * CloseableHttpResponse response = httpClient.execute(get)) {
-	 * 
-	 * log.info("Protocol: " + response.getProtocolVersion().toString());
-	 * log.info("Status Code: " + response.getStatusLine().getStatusCode());
-	 * log.info("Reason Phrase: " + response.getStatusLine().getReasonPhrase());
-	 * log.info("Status Line: " + response.getStatusLine().toString());
-	 * 
-	 * result = EntityUtils.toString(response.getEntity()); }
-	 * 
-	 * return result; }
-	 */
 }

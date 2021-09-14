@@ -1,6 +1,6 @@
-package com.example.demo.auth.provider.user;
+package com.example.demo.auth.provider.dto;
 
-public class LoginResponse {
+public class LoginResponseDto {
 
 	private String buildBranch;
 	private String tokenId;
