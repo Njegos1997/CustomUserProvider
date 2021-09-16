@@ -1,7 +1,14 @@
 package com.example.demo.auth.provider.user;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.keycloak.Config.Scope;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.provider.ProviderConfigProperty;
+import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.UserStorageProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,4 +30,37 @@ public class CustomUserStorageProviderFactory
 		 log.info("[I69] getId()");
 	        return PROVIDER_NAME;
 	} 
+	
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public void postInit(KeycloakSessionFactory factory) {
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public void init(Scope config) {
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public UserStorageProvider create(KeycloakSession session) {
+		return null;
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public List<ProviderConfigProperty> getConfigProperties() {
+		// TODO Auto-generated method stub
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public String getHelpText() {
+		// TODO Auto-generated method stub
+		 return "";
+	}
 }
